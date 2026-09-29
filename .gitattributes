@@ -1,0 +1,22 @@
+# Normalize line endings in the repository.
+# This project is developed on Windows but BUILT on Linux (Render + Vercel),
+# so committed files must use LF. Without this, git's autocrlf can check in
+# CRLF and break shell/YAML tooling in the Linux build environment.
+* text=auto eol=lf
+
+# Binary assets must never be line-ending normalized.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.mp4 binary
+*.mov binary
+*.woff binary
+*.woff2 binary
+
+# Lockfiles: keep as-is, npm/pip require exact bytes.
+package-lock.json -text
+pnpm-lock.yaml -text
+yarn.lock -text

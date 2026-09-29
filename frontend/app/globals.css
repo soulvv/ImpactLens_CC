@@ -1,0 +1,98 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg-canvas: #f8f7f4;
+    --bg-surface: #ffffff;
+    --bg-surface-subtle: #f1efea;
+    --border-hairline: #e2dfd8;
+    --border-strong: #c8c4bc;
+
+    --ink-primary: #111827;
+    --ink-secondary: #374151;
+    --ink-muted: #6b7280;
+
+    --sage-primary: #204533;
+    --sage-hover: #173326;
+    --sage-surface: #eaf2ec;
+    --sage-border: #b8d4c0;
+
+    --amber-primary: #92400e;
+    --amber-surface: #fef3c7;
+    --amber-border: #fde68a;
+
+    --font-sans: var(--font-plex-sans), system-ui, sans-serif;
+    --font-mono: var(--font-plex-mono), monospace;
+    --font-serif: var(--font-newsreader), Georgia, serif;
+  }
+}
+
+body {
+  background-color: var(--bg-canvas);
+  color: var(--ink-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Font utilities */
+.font-sans {
+  font-family: var(--font-sans);
+}
+.font-mono {
+  font-family: var(--font-mono);
+}
+.font-serif {
+  font-family: var(--font-serif);
+}
+
+/* Tabular figures for coordinates, timestamps, hashes, bytes */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tectonic Hairline Borders (no shadows) */
+.hairline-border {
+  border: 1px solid var(--border-hairline);
+}
+
+/* Custom utilitarian scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: #f1efea;
+}
+::-webkit-scrollbar-thumb {
+  background: #d4d0c7;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a396;
+}
+
+/* Print styles for Impact Reports */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  aside,
+  header,
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+  .page-break {
+    page-break-after: always;
+    break-after: page;
+  }
+}
+

@@ -1,0 +1,111 @@
+# ==============================================================================
+# ImpactLens AI — Render Blueprint (native Python runtime)
+#
+# Deploy with:  New -> Blueprint -> point at this repo
+#
+# The `sync: false` entries are secrets. Render prompts for them when the
+# Blueprint is created and never stores them in this file.
+#
+# ORDER MATTERS: deploy this backend FIRST and capture its URL
+# (https://impactlens-api.onrender.com). Then set NEXT_PUBLIC_API_URL on
+# Vercel and deploy the frontend. NEXT_PUBLIC_* values are inlined into the
+# client bundle at BUILD time, so a frontend deployed first would bake in a
+# dead URL and would need a redeploy to fix.
+# ==============================================================================
+
+services:
+  - type: web
+    name: impactlens-api
+    runtime: python
+    plan: free
+    rootDir: ./backend
+    buildCommand: pip install -r requirements.txt
+    # Render injects $PORT. Do NOT use backend/run.py: it hardcodes
+    # reload=True and port=8000, both wrong in production.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+
+    envVars:
+      # --- Application core ---
+      - key: PROJECT_NAME
+        value: ImpactLens AI
+      - key: API_V1_STR
+        value: /api
+      - key: ENVIRONMENT
+        value: production
+      - key: DEBUG
+        value: "false"
+
+      # --- Database (REQUIRED) ---
+      # Use an external provider (Neon or Supabase) rather than Render's own
+      # Postgres: Render's free Postgres is DELETED after 30 days.
+      #
+      # CRITICAL: if DATABASE_URL is wrong or unreachable, app/db/database.py
+      # SILENTLY falls back to SQLite on the ephemeral instance disk. Every
+      # redeploy then wipes your data, with no error and a healthy /health.
+      # After the first deploy, confirm /health reports "engine": "postgresql".
+      - key: DATABASE_URL
+        sync: false
+
+      # --- Cloudinary media storage (REQUIRED in production) ---
+      # Without these, uploads fall back to the instance's local disk
+      # (backend/uploads/), which is ephemeral: files vanish on every deploy
+      # and the stored /static/uploads/... URLs return 404. The upload still
+      # returns HTTP 201, so this fails silently.
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+
+      # --- Google Gemini multimodal AI (REQUIRED for real analysis) ---
+      # If unset, analysis degrades to offline ecological heuristics.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+
+      # --- OmniDimension voice assistant (optional) ---
+      # Leave blank to use the embedded local fallback voice.
+      - key: OMNIDIM_API_KEY
+        sync: false
+      - key: OMNIDIM_AGENT_ID
+        sync: false
+      - key: OMNIDIM_BASE_URL
+        value: https://omnidim.io/api/v1
+
+      # --- CORS (REQUIRED) ---
+      # Read once at startup in app/main.py, so changing it later requires a
+      # redeploy, not just a dashboard save.
+      # Set to your Vercel URL, e.g. https://impactlens.vercel.app
+      # Do NOT use "*": main.py sets allow_credentials=True, and browsers
+      # reject credentialed requests against a wildcard origin.
+      - key: CORS_ORIGINS
+        sync: false
+
+      # --- FFmpeg (Phase 3.5 video) ---
+      # Intentionally NOT set. Render's native Python runtime cannot install
+      # system packages, so no ffmpeg binary exists here. Leaving the vars
+      # unset lets shutil.which() return None so VideoService reports
+      # "FFmpeg not found" cleanly and uses its fallbacks:
+      #   - metadata:  ffprobe -> HTTP/Cloudinary URL heuristics
+      #   - keyframes: local ffmpeg -> Cloudinary so_<seconds> frame serving
+      # Cloudinary frame extraction still returns real JPEGs per timestamp,
+      # so Phase 3.5 remains functional.
+      # To get local FFmpeg later, switch this service to the Docker runtime
+      # with an ffmpeg layer (higher fidelity, slower cold starts).
+      - key: VIDEO_MAX_ANALYSIS_DURATION_SECONDS
+        value: "180"
+      - key: VIDEO_MAX_FRAMES
+        value: "8"
+
+# ==============================================================================
+# Database: NOT declared here on purpose.
+#
+# Adding a `databases:` block would provision a Render-managed Postgres that
+# Render deletes after 30 days on the free plan, taking your data with it.
+# Provision Neon (https://neon.tech) or Supabase instead and paste the
+# connection string into DATABASE_URL above. Both have free tiers that persist.
+# ==============================================================================
