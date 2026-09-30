@@ -54,7 +54,10 @@ async def lifespan(app: FastAPI):
 
     # 5. FFmpeg validation
     import shutil
-    ffmpeg_bin = getattr(settings, "FFMPEG_PATH", "ffmpeg")
+    # Use `or`, not getattr(settings, "FFMPEG_PATH", "ffmpeg"): the attribute
+    # always exists and defaults to None, so getattr's default never applies and
+    # shutil.which(None) raises TypeError, which aborts startup entirely.
+    ffmpeg_bin = settings.FFMPEG_PATH or "ffmpeg"
     if shutil.which(ffmpeg_bin):
         logger.info("[CONFIG] FFmpeg video processing pipeline available (%s).", ffmpeg_bin)
     else:
