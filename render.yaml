@@ -17,6 +17,12 @@ services:
   - type: web
     name: impactlens-api
     runtime: python
+    # pythonVersion is deliberately NOT pinned. Render rejects a build pinned to
+    # a patch release it does not stock, and its current default could not be
+    # verified, so a guessed exact pin risks a hard deploy failure. CI instead
+    # runs the backend job on Python 3.12, 3.13 and 3.14, so whichever version
+    # Render defaults to is already verified. To pin anyway, set pythonVersion
+    # here to a version listed in the Render dashboard.
     plan: free
     rootDir: ./backend
     buildCommand: pip install -r requirements.txt

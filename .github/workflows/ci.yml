@@ -23,18 +23,28 @@ concurrency:
 
 jobs:
   backend:
-    name: Backend (FastAPI)
+    name: Backend (FastAPI, py${{ matrix.python-version }})
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: backend
+
+    # render.yaml deliberately does NOT pin pythonVersion, because Render
+    # rejects builds pinned to a patch it does not stock and its current
+    # default could not be verified. Instead of guessing one version, this
+    # matrix verifies every 3.x that Render could plausibly default to, so
+    # whichever it picks is already CI-proven.
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.13", "3.14"]
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
           cache: pip
           cache-dependency-path: backend/requirements.txt
 
