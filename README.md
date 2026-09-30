@@ -1,7 +1,22 @@
 # ImpactLens AI — Operational Media Intelligence Platform
 
+[![CI](https://github.com/soulvv/ImpactLens_CC/actions/workflows/ci.yml/badge.svg)](https://github.com/soulvv/ImpactLens_CC/actions/workflows/ci.yml)
+
 > **Problem Statement 2 — Code Cubicle 6.0 | Production Architecture (Phases 1, 2, 3, 3.5, 4 + OmniDimension)**  
 > AI-powered sustainability and environmental impact media intelligence platform for NGOs, governments, and research institutions.
+
+---
+
+## 0. Continuous Integration
+
+Every push and pull request to `main` runs [`.github/workflows/ci.yml`](.github/workflows/ci.yml), which reproduces the production build on a clean Linux runner with **no secrets and no `backend/.env`** — the conditions Render and Vercel actually run under:
+
+| Job | What it proves |
+| --- | --- |
+| `Backend (FastAPI, py3.12 / py3.13 / py3.14)` | Dependencies install, the app imports, the full 48-path API surface registers, and `/health` returns 200. Run as a matrix because `render.yaml` intentionally does not pin `pythonVersion`, so every version Render could default to is covered. |
+| `Frontend (Next.js)` | `npm ci` from the committed lockfile, `tsc --noEmit`, and `next build`. |
+
+This exists because the local environment masks production failures. Three defects that would have broken a deploy passed locally and were caught only here: a startup `TypeError` when `FFMPEG_PATH` was unset, a `package-lock.json` out of sync with `package.json` (`npm ci` hard-fails on that), and a build-time fetch to `fonts.googleapis.com` that made `next build` intermittently fail. Fonts are now self-hosted under `frontend/app/fonts/`, so the frontend build needs no network access.
 
 ---
 
