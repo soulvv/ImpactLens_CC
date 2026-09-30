@@ -29,7 +29,11 @@ def health_check(db: Session = Depends(get_db)):
     omnidim_active = bool(settings.is_omnidim_configured)
     
     # Check FFmpeg availability
-    ffmpeg_bin = getattr(settings, "FFMPEG_PATH", "ffmpeg")
+    # Use `or`, not getattr(settings, "FFMPEG_PATH", "ffmpeg"): the attribute
+    # exists and defaults to None, so getattr's default never applies and
+    # shutil.which(None) raises TypeError. That turned /health into a 500,
+    # which would fail the Render health check and fail the deploy.
+    ffmpeg_bin = settings.FFMPEG_PATH or "ffmpeg"
     ffmpeg_available = bool(shutil.which(ffmpeg_bin))
 
     overall_status = "ok" if db_connected else "degraded"
